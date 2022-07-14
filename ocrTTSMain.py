@@ -54,7 +54,7 @@ while True:
     if status == 'detecting':
         if resultStr.count('自动') == 0:
             print('获取到了非关键数据')
-            time.sleep(1)
+            time.sleep(0.5)
         else:
             print('检测到处于对话')
             lastStr = ''
