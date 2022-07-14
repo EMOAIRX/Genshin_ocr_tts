@@ -1,6 +1,6 @@
 import time
 from PIL import ImageGrab
-import easyocr
+from paddleocr import PaddleOCR, draw_ocr;
 import cv2
 from getScreenRect import getScreenRect
 from ttsRead import ttsRead
@@ -9,8 +9,7 @@ from difflib import SequenceMatcher
 print('正在启动服务')
 ttsRead('正在启动服务')
 
-reader = easyocr.Reader(['ch_sim', 'en'])
-
+reader = PaddleOCR(use_angle_cls=True, lang="ch")
 
 def filter(s: str) -> bool:
     rate = 0
@@ -38,7 +37,18 @@ while True:
     ImageGrab.grab(bbox=bbox).save(imPath)
     im0 = cv2.imread(imPath)
     im1 = cv2.resize(im0, (0, 0), fx=.5, fy=.5)
-    result = reader.readtext(im1, detail=0)
+    #cv2.imshow("None",im0)
+    print('STARTing OCR')
+    result = reader.ocr(im1)
+    print('End OCR')
+    #x[0] 
+    #result = [x[0] for x in result]
+    result = [x[1][0] for x in result]
+    print(result)
+    #time.sleep(10)
+#    result = reader.readtext(im1, detail=0)
+#   x[0]是坐标信息
+#   x[1]是文本和置信度信息
     result = [x for x in result if filter(x)]
     resultStr = '\n'.join(result)
     if status == 'detecting':
