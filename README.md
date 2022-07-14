@@ -1,8 +1,8 @@
 # genshin-ocr-tts
 
-## 实验性第一版
+## develop-ver1.0
 
-【自实验期稳定第一版起】更新历史：
+【自原型起】更新历史：
 
 增加空闲时的睡眠功能
 
@@ -13,5 +13,20 @@
 todo-list:
 
 更改为paddleocr。
+
+更改为不依赖网络的，多声库的tts。
+
+
+## develop-ver1.1
+
+【自develop-ver1.0起】更新历史：
+
+采用paddleocr
+
+采用了灰度图和滤色
+
+todo-list:
+
+use_gpu=True
 
 更改为不依赖网络的，多声库的tts。

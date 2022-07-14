@@ -6,10 +6,14 @@ from myPlaysound import playsound
 
 
 def fromStrToMp3(strValue: str, path: str):
+    if strValue=='':
+        return 
     url = 'https://dict.youdao.com/dictvoice?le=auto&audio=' + \
         parse.quote(strValue, encoding='utf-8')
 
-    r = requests.get(url)
+    session = requests.Session()
+    session.trust_env = False
+    r = session.get(url)
     with open(path, 'wb') as f:
         f.write(r.content)
         f.close

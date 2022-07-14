@@ -2,3 +2,4 @@ paddleocr
 paddlepaddle
 Shapely
 pywin32
+pyautogui
