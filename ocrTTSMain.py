@@ -3,7 +3,7 @@ from paddleocr import PaddleOCR
 import cv2
 from getScreenRect import getScreenRect
 from ttsRead import ttsRead
-from difflib import SequenceMatcher
+# from difflib import SequenceMatcher
 import pyautogui
 import numpy as np
 # import copy
