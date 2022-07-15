@@ -3,36 +3,14 @@ from paddleocr import PaddleOCR
 import cv2
 from getScreenRect import getScreenRect
 from ttsRead import ttsRead
-# from difflib import SequenceMatcher
+
 import pyautogui
 import numpy as np
-# import copy
-
-# forMoreDetails = True
-
-# image = cv2.imread("./genshin.png")
-# im0 = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
-# im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
 
 print('正在启动服务')
 ttsRead('正在启动服务')
 
 reader = PaddleOCR(use_angle_cls=True, lang="ch", use_gpu=False)
-
-# def isNotASCII(s: str) -> bool:
-#     rate = 0
-#     for x in s:
-#         if ord(x) <= 127:
-#             rate += 1
-#     rate /= len(s)
-#     return rate < 4/5
-
-
-# lastStr = ''
-
-
-# def isDifferent(s: str) -> bool:
-#     return SequenceMatcher(None, lastStr, s).ratio() < .8
 
 
 def getRegion(status: str) -> 'tuple[int, int, int, int]':
@@ -56,19 +34,14 @@ color['rolling'] = np.array([238, 242, 246])  # 下面文本的颜色
 
 
 def get_image(status):
-    # imPath = './youdao-ver-tmp.png'
-    # rect = getScreenRect()
+
     image = pyautogui.screenshot(region=getRegion(status))
     # 获取图片，
-    # if forMoreDetails:
-    #     image.save(imPath)
     im0 = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
     lower_color = color[status]
     upper_color = color[status]
     im0 = cv2.inRange(im0, lower_color, upper_color)
     # inrange函数将根据最小最大HSV值检测出自己想要的颜色部分
-    # ret, im0 = cv2.threshold(im0, 240, 255, type=cv2.THRESH_TOZERO)
-    # im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
     return im0
 
 
@@ -121,4 +94,3 @@ while True:
             print('检测到字幕仍然在滚动，当前检测到文本为：', Current_str)
 
     pre_image = now_image
-    # laststatus = status
