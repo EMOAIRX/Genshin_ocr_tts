@@ -41,9 +41,9 @@ def getRegion(status: str) -> 'tuple[int, int, int, int]':
     if isDetecting:
         return (0, 0, rect[0]*2//10, rect[1]*2//10)
     else:
-        left = rect[0]//20
+        left = rect[0] * 0.17
         right = rect[0]-left
-        top = rect[1]//3
+        top = rect[1]//4
         return (left, top, right-left, rect[1]-top)
 
 
@@ -69,15 +69,14 @@ def get_image(status):
     # inrange函数将根据最小最大HSV值检测出自己想要的颜色部分
     # ret, im0 = cv2.threshold(im0, 240, 255, type=cv2.THRESH_TOZERO)
     # im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
-
     return im0
 
 
 def get_ocr_word(image):
-    image_shrink = cv2.resize(image, (0, 0), fx=.5, fy=.5)
+    image_shrink = cv2.resize(image, (0, 0), fx=.7, fy=.7)
     result = reader.ocr(image_shrink)
     result = [x[1][0] for x in result]
-    resultStr = '\n'.join(result)
+    resultStr = ' '.join(result)
     return resultStr
 
 
@@ -88,7 +87,7 @@ while True:
         # 用于判断是否存在“自动”两个字
         resultStr = get_ocr_word(now_image)
         print('detecting -- ', resultStr)
-        if resultStr.count('自动') == 0:
+        if resultStr.count('自动') == 0 and resultStr.count('Auto') == 0:
             print('获取到了非关键数据')
             time.sleep(0.5)
         else:
@@ -116,6 +115,7 @@ while True:
                 print(result)
                 ttsRead(result)
             Current_str = ''
+            time.sleep(0.2)
         else:
             Current_str += get_ocr_word(delta_image)
             print('检测到字幕仍然在滚动，当前检测到文本为：', Current_str)
