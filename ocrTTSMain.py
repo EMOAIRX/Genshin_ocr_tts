@@ -6,6 +6,7 @@ from ttsRead import ttsRead
 from difflib import SequenceMatcher
 import pyautogui
 import numpy as np
+import copy
 
 forMoreDetails = True
 
@@ -38,7 +39,7 @@ def getRegion(status: str) -> 'tuple[int, int, int, int]':
     isDetecting = (status == 'detecting')
     rect = getScreenRect()
     if isDetecting:
-        return (0, 0, rect[0]*3//10, rect[1]*3//10)
+        return (0, 0, rect[0]*2//10, rect[1]*2//10)
     else:
         left = rect[0]//20
         right = rect[0]-left
@@ -50,67 +51,70 @@ print('启动成功')
 ttsRead('启动成功')
 status = 'detecting'
 color = {}
-color['detecting'] = np.array([255, 255, 255])
-color['waiting'] = np.array([238, 242, 246])
-color['keeping'] = np.array([238, 242, 246])
-while True:
+color['detecting'] = np.array([255, 255, 255]) #自动两个字的颜色
+color['rolling'] = np.array([238, 242, 246]) #下面文本的颜色
+
+def get_image(status):
     imPath = './youdao-ver-tmp.png'
     rect = getScreenRect()
     image = pyautogui.screenshot(region=getRegion(status))
     #获取图片，
-
-    if forMoreDetails:
-        image.save(imPath)
-
+    # if forMoreDetails:
+    #     image.save(imPath)
     im0 = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
     lower_color = color[status]
     upper_color = color[status]
     im0 = cv2.inRange(im0, lower_color, upper_color)  # inrange函数将根据最小最大HSV值检测出自己想要的颜色部分
 #    ret, im0 = cv2.threshold(im0, 240, 255, type=cv2.THRESH_TOZERO)
-    if forMoreDetails:
-        cv2.imshow("0000",im0)
-        cv2.waitKey(0)
 #    im0 = cv2.cvtColor(im0, cv2.COLOR_BGR2GRAY)
-    im1 = cv2.resize(im0, (0, 0), fx=.5, fy=.5)
+    
+    return im0
 
-    if forMoreDetails:
-        print('STARTing OCR')
-    result = reader.ocr(im1)
-    if forMoreDetails:
-        print('End OCR')
-
+def get_ocr_word(image):
+    image_shrink = cv2.resize(image, (0, 0), fx=.5, fy=.5)
+    result = reader.ocr(image_shrink)
     result = [x[1][0] for x in result]
-    # x[0]是坐标信息
-    # x[1]是文本和置信度信息
-    result = [x for x in result if isNotASCII(x)]
     resultStr = '\n'.join(result)
-    if forMoreDetails:
-        print(result)
+    return resultStr
+
+while True:
+    now_image = get_image(status)
 
     if status == 'detecting':
         #用于判断是否存在“自动”两个字
-        resultStr = '\n'.join(result)
+        resultStr = get_ocr_word(now_image)
+        print('detecting -- ',resultStr)
         if resultStr.count('自动') == 0:
             print('获取到了非关键数据')
             time.sleep(0.5)
         else:
             print('检测到处于对话')
-            lastStr = ''
-            status = 'waiting'
-    elif status == 'waiting':
-        if not isDifferent(resultStr):
-            print(result)
-            ttsRead(resultStr)
-            status = 'keeping'
-        else:
-            print('检测到字幕仍然在滚动')
-    elif status == 'keeping':
-        if isDifferent(resultStr):
+            status = 'rolling'
+            first_IMAGE = get_image('rolling')
+            now_image = first_IMAGE
+            Current_str = get_ocr_word(first_IMAGE)
+            #ttsRead('第一次检测到的文本是'+Current_str)
+
+    elif status == 'rolling':
+        delta_image = now_image - pre_image
+        
+        negative = np.count_nonzero(now_image < pre_image) # 0 - 255 = 1，负数溢出
+        positive = np.count_nonzero(now_image > pre_image)
+
+        print(positive,'-----',negative)
+        print(positive)
+        if negative > 5: #需要重新检测，估计是切屏了，或者新的一句话
             status = 'detecting'
             print('检测到画面变化，查询是否存在对话')
+        elif positive < 5: #几乎没有变化，这个权值不知道设多少好，
+            result = Current_str
+            if(len(result)):
+                print(result)
+                ttsRead(result)
+            Current_str = ''
         else:
-            print('检测到画面保持')
+            Current_str += get_ocr_word(delta_image)
+            print('检测到字幕仍然在滚动，当前检测到文本为：',Current_str)
 
-    lastStr = resultStr
-    lastIm0 = im0
+    pre_image = now_image
     laststatus = status
