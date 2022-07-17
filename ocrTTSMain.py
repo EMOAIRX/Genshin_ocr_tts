@@ -33,19 +33,20 @@ print('启动成功')
 ttsRead('启动成功')
 status = 'detecting'
 color = {}
+                            # B G R
 color['detecting'] = np.array([255, 255, 255])  # 自动两个字的颜色
 color['rolling'] = np.array([238, 242, 246])  # 下面文本的颜色
-
+color['gray_auto'] = np.array([216,229,236])
 
 def get_image(status):
     image = pyautogui.screenshot(region=getRegion(status))
     # 获取图片，
-    im0 = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
+    image = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
     lower_color = color[status]
     upper_color = color[status]
-    im0 = cv2.inRange(im0, lower_color, upper_color)
+    im0 = cv2.inRange(image, lower_color, upper_color)
     # inrange函数将根据最小最大HSV值检测出自己想要的颜色部分
-    return im0
+    return image,im0
 
 
 def get_ocr_word(image):
@@ -70,10 +71,10 @@ def filter_word_only(image):
     Right = 0
     Top = len[1]
     Down = 0
-    print(len[0],len[1])
+    # print(len[0],len[1])
     tmp = np.nonzero(image)
     word_len = tmp[0].shape[0]
-    print(len)
+    # print(len)
     for i in range(word_len):
         x = tmp[0][i]
         y = tmp[1][i]
@@ -87,11 +88,11 @@ def filter_word_only(image):
     Left = max(Left,0)
     Top = max(Top,0)
     Down = min(Down,image.shape[0])
-    print(Left,Right,Top,Down)
+    # print(Left,Right,Top,Down)
     if(Left >= Right or Top >= Down):
         return (0,0)
     image = image[Top:Down,Left:Right]
-    print(image.shape)
+    # print(image.shape)
 #    print('end time',time.time())
 #    cv2.imshow("img", image)
 #    cv2.waitKey(0)  
@@ -99,9 +100,20 @@ def filter_word_only(image):
 
 
 while True:
-    now_image = get_image(status)
+    raw,now_image = get_image(status)
 
     if status == 'detecting':
+        #检测灰色像素
+        tmp_es = np.array([216,229,236])
+        lower_color = tmp_es - [3,3,3]
+        upper_color = tmp_es + [3,3,3]
+        print(lower_color,upper_color)
+        sum = np.sum(cv2.inRange(raw, lower_color, upper_color)>127)
+        #print('detecting sum = ',sum)
+        if(sum < 500):
+            time.sleep(0.05)
+            continue
+
         # 用于判断是否存在“自动”两个字
         resultStr = get_ocr_word(now_image)
         print('detecting -- ', resultStr)
@@ -111,7 +123,7 @@ while True:
         else:
             print('检测到处于对话')
             status = 'rolling'
-            first_IMAGE = get_image(status)
+            raw,first_IMAGE = get_image(status)
             now_image = first_IMAGE
             Current_str = get_ocr_word(first_IMAGE)
             print('第一次检测到的文本是'+Current_str)
